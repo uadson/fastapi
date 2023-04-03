@@ -19,3 +19,11 @@ if __name__ == "__main__":
         log_level="info",
         reload=True
     )
+
+"""
+Token:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNjgxMTUwNTc2LCJpYXQiOjE2ODA1NDU3NzYsInN1YiI6IjQifQ.whs6qpy_9dh_CQ6uS5nRRpgyd0bA10HxQAGTkr_XKn8
+
+Tipo:
+bearer
+"""

@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.exc import IntegrityError
 
 from models.user_model import UserModel
 from schemas.user_schema import (
@@ -23,7 +24,7 @@ from core.auth import authenticate, create_token_access
 router = APIRouter()
 
 
-# POST logon
+# POST login
 @router.post('/login')
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), 
@@ -61,10 +62,12 @@ async def post_user(user: UserSchemaCreate, db: AsyncSession = Depends(get_sessi
     )
 
     async with db as session:
-        session.add(new_user)
-        await session.commit()
-        return new_user
-
+        try:
+            session.add(new_user)
+            await session.commit()
+            return new_user
+        except IntegrityError:
+            raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
 # GET
 @router.get('/', response_model=List[UserSchemaBase])
@@ -133,7 +136,7 @@ async def delete_user(
         user_del: UserSchemaArticles = result.scalars().unique().one_or_none()
 
         if user_del:
-            await session.delete_user(user_del)
+            await session.delete(user_del)
             await session.commit()
             return Response(status_code=status.HTTP_204_NO_CONTENT)
         else:

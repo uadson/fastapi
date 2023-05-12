@@ -1,0 +1,14 @@
+{% extends '_base.html' %}
+
+{% block title %}Blog | Home{% endblock title %}
+
+{% block content %}
+    <!-- Page Content-->
+    {% include 'blog/home/includes/_company.html' %}
+
+    {% include 'blog/home/includes/_news.html' %}
+    
+    <!-- Blog preview section-->
+    {% include 'blog/home/includes/_features.html' %}
+            
+{% endblock content %}

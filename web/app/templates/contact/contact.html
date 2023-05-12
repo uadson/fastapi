@@ -1,0 +1,23 @@
+{% extends '_base.html' %}
+
+{% block title %}Contato{% endblock title %}
+
+{% block content %}
+<!-- Page content-->
+<section class="py-5">
+    <div class="container px-5">
+        <!-- Contact form-->
+        {% include 'contact/includes/_form.html' %}
+        <!-- Contact cards-->
+        {% include 'contact/includes/_cards.html' %}
+    </div>
+</section>
+{% endblock content %}
+
+{% block js %}
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+<!-- * *                               SB Forms JS                               * *-->
+<!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+<script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+{% endblock js %}

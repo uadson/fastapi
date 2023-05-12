@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>FastAPI Web</title>
+		{% block style %}
+		<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='css/style.css') }}">
+		{% endblock style %}
+	</head>
+	<body>
+		<h1>FastAPI Web</h1>
+		<div>
+			<a href="/">Home</a>
+			<a href="/servicos">Serviços</a>
+		</div>
+		<div class="container">
+			<center>
+				<h1>FastAPI Web na <u>Geek University</u></h1>
+				<span>Para mais cursos, visite nosso site clicando <a href="https://www.geekuniversity.com.br" target="_blank">aqui</a>.</span>
+				{% block content %}{% endblock content %}	
+			</center>		
+		</div>
+	</body>
+</html>

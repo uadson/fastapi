@@ -1,13 +1,12 @@
-from pydantic import BaseSettings
 from sqlalchemy.ext.declarative import declarative_base
 
 
-class Settings(BaseSettings):
+class Settings:
     """
         Base Settings Application
     """
     API_V1_STR: str = '/api/v1'
-    DB_URL: str = 'postgresql+asyncpg://postgres:admin@localhost:5432/high_school'
+    DB_URL: str = 'postgresql+asyncpg://dev:dbadmin@localhost/high_school'
     DBBaseModel = declarative_base()
 
     JWT_SECRET: str = 'rGvyW2TeuWQe_pwmDP8AQRGCF2Y0TSuXtro75S4a6NE'

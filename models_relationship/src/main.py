@@ -1,7 +1,8 @@
-from fastapi import FastAPI, HTTPException, status, Query
+from fastapi import FastAPI, HTTPException, status, Query, Depends
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 
+# SCHEMAS/MODELS
 class HeroBase(SQLModel):
     name: str = Field(index=True)
     secret_name: str
@@ -10,10 +11,11 @@ class HeroBase(SQLModel):
     
 class Hero(HeroBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    hashed_password: str = Field()
     
 
 class HeroCreate(HeroBase):
-    pass    
+    password: str  
 
 
 class HeroPublic(HeroBase):
@@ -24,8 +26,10 @@ class HeroUpdate(SQLModel):
     name: str | None = None
     secret_name: str | None = None
     age: int | None = None
+    password: str | None = None
     
 
+# DATABASE
 sqlite_file_name = "db.sqlite3"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
@@ -35,8 +39,19 @@ engine = create_engine(sqlite_url, echo=True, connect_args=connect_args)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
+    
+
+# DEPENDS
+def get_session():
+    with Session(engine) as session:
+        yield session
 
 
+# ACTIONS
+def hash_password(password: str) -> str:
+    return f'not really hashed {password} hehehe'
+
+# MAIN
 app = FastAPI()
 
 
@@ -45,14 +60,32 @@ def on_startup():
     create_db_and_tables()
 
 
-@app.post("/heroes/", response_model=HeroPublic, status_code=status.HTTP_201_CREATED)
-def create_hero(hero: HeroCreate):
-    with Session(engine) as session:
-        db_hero = Hero.model_validate(hero)
-        session.add(db_hero)
-        session.commit()
-        session.refresh(db_hero)
-        return db_hero
+# ROUTERS
+
+# CREATE
+
+# NO DEPENDS
+# @app.post("/heroes/", response_model=HeroPublic, status_code=status.HTTP_201_CREATED)
+# def create_hero(hero: HeroCreate):
+#     hashed_password = hash_password(hero.password)
+#     with Session(engine) as session:
+#         extra_data = {'hashed_password': hashed_password}
+#         db_hero = Hero.model_validate(hero, update=extra_data)
+#         session.add(db_hero)
+#         session.commit()
+#         session.refresh(db_hero)
+#         return db_hero
+
+# WITH DEPENDS
+@app.post('/heroes/', response_model= HeroPublic, status_code=status.HTTP_201_CREATED)
+def create_hero(*, session: Session = Depends(get_session), hero: HeroCreate):
+    hashed_password = hash_password(hero.password)
+    extra_data = {'hashed_password': hashed_password}
+    db_hero = Hero.model_validate(hero, update=extra_data)
+    session.add(db_hero)
+    session.commit()
+    session.refresh(db_hero)
+    return db_hero
 
 
 # @app.get("/heroes/", response_model=list[HeroPublic], status_code=status.HTTP_200_OK)
@@ -61,35 +94,114 @@ def create_hero(hero: HeroCreate):
 #         heroes = session.exec(select(Hero)).all()
 #         return heroes
 
-@app.get("/heroes/", response_model=list[HeroPublic], status_code=status.HTTP_200_OK)
-def read_heroes(offset: int = 0, limit: int = Query(default=100, le=100)):
-    with Session(engine) as session:
-        heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
-        return heroes
+# READ
+
+# NO DEPENDS
+# @app.get("/heroes/", response_model=list[HeroPublic], status_code=status.HTTP_200_OK)
+# def read_heroes(offset: int = 0, limit: int = Query(default=100, le=100)):
+#     with Session(engine) as session:
+#         heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
+#         return heroes
+
+# WITH DEPENDS
+@app.get('/heroes/', response_model=list[HeroPublic], status_code=status.HTTP_200_OK)
+def read_heroes(session: Session = Depends(get_session), offset: int = 0, limit: int = Query(default=100, le=100)):
+    heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
+    return heroes
+
+# READ
+
+# NO DEPENDS
+# @app.get("/heroes/{hero_id}", response_model=HeroPublic, status_code=status.HTTP_200_OK)
+# def read_hero(hero_id: int):
+#     with Session(engine) as session:
+#         hero = session.get(Hero, hero_id)
+#         if not hero:
+#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hero not found")
+#         return hero
+
+# WITH DEPENDS
+@app.get('/heroes/{hero_id}', response_model=HeroPublic, status_code=status.HTTP_200_OK)
+def read_hero(*, session: Session = Depends(get_session), hero_id: int):
+    hero = session.get(Hero, hero_id)
+    if not hero:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Hero not found')
+    return hero
     
 
-@app.get("/heroes/{hero_id}", response_model=HeroPublic, status_code=status.HTTP_200_OK)
-def read_hero(hero_id: int):
-    with Session(engine) as session:
-        hero = session.get(Hero, hero_id)
-        if not hero:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hero not found")
-        return hero
+# UPDATE
+
+# NO DEPENDS
+# @app.patch("/heroes/{hero_id}", response_model=HeroPublic, status_code=status.HTTP_200_OK)
+# def update_hero(hero_id: int, hero: HeroUpdate):
+#     with Session(engine) as session:
+#         db_hero = session.get(Hero, hero_id)
+#         if not db_hero:
+#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hero not found")
+#         hero_data = hero.model_dump(exclude_unset=True)
+#         extra_data = {}
+#         if 'password' in hero_data:
+#             password = hero_data['password']
+#             hashed_password = hash_password(password)
+#             extra_data['hashed_password'] = hashed_password
+#         db_hero.sqlmodel_update(hero_data)
+#         session.add(db_hero)
+#         session.commit()
+#         session.refresh(db_hero)
+#         return db_hero
+
+# WITH DEPENDS
+@app.patch('/heroes/{hero_id}', response_model=HeroPublic, status_code=status.HTTP_202_ACCEPTED)
+def update_hero(*, session: Session = Depends(get_session), hero_id: int, hero: HeroUpdate):
+    db_hero = session.get(Hero, hero_id)
+    
+    if not db_hero:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Hero not found')
+    
+    hero_data = hero.model_dump(exclude_unset=True)
+    
+    extra_data = {}
+    
+    if 'password' in hero_data:
+        password = hero_data['password']
+        hashed_password = hash_password(password)
+        extra_data['hashed_password'] = hashed_password
+        
+    db_hero.sqlmodel_update(hero_data)
+    
+    # for key, value in hero_data.items():
+    #     setattr(db_hero, key, value)
+    
+    session.add(db_hero)
+    session.commit()
+    session.refresh(db_hero)
+    
+    return db_hero
     
 
-@app.patch("/heroes/{hero_id}", response_model=HeroPublic, status_code=status.HTTP_200_OK)
-def update_hero(hero_id: int, hero: HeroUpdate):
-    with Session(engine) as session:
-        db_hero = session.get(Hero, hero_id)
-        if not db_hero:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hero not found")
-        hero_data = hero.model_dump(exclude_unset=True)
-        db_hero.sqlmodel_update(hero_data)
-        session.add(db_hero)
-        session.commit()
-        session.refresh(db_hero)
-        return db_hero
+# DELETE
+# NO DEPENDS
+# @app.delete('/heroes/{hero_id}')
+# def delete_hero(hero_id: int):
+#     with Session(engine) as session:
+#         hero = session.get(Hero, hero_id)
+#         if not hero:
+#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Hero not found')
+#         session.delete(hero)
+#         session.commit()
+#         message = 'Hero deleted successfully!'
+#         return {'message': message}
 
+# WITH DEPENDS
+@app.delete('/heroes/{hero_id}')
+def delete_hero(*, session: Session = Depends(get_session), hero_id: int):
+    hero = session.get(Hero, hero_id)
+    if not hero:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Hero not found')
+    session.delete(hero)
+    session.commit()
+    message = 'Hero deleted successfully'
+    return {'message': message}
 
 # def select_heroes():
 #     with Session(engine) as session:

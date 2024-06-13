@@ -1,17 +1,47 @@
 from fastapi import FastAPI, HTTPException, status, Query, Depends
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, Session, SQLModel, create_engine, select, Relationship
 
 
 # SCHEMAS/MODELS
+  
+# TEAMS
+class TeamBase(SQLModel):
+    name: str = Field(index=True)
+    headquarters: str
+    
+
+class Team(TeamBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    
+    heroes: list['Hero'] = Relationship(back_populates='team')
+    
+
+class TeamCreate(TeamBase):
+    pass
+
+
+class TeamPublic(TeamBase):
+    id: int
+    
+    
+class TeamUpdate(SQLModel):
+    name: str | None = None
+    headquarters: str | None = None
+
+
+# HEROES
 class HeroBase(SQLModel):
     name: str = Field(index=True)
     secret_name: str
     age: int | None = Field(default=None, index=True)
     
+    team_id: int | None = Field(default=None, foreign_key='team.id')
+    
     
 class Hero(HeroBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str = Field()
+    team: Team | None = Relationship(back_populates='heroes')
     
 
 class HeroCreate(HeroBase):
@@ -27,7 +57,7 @@ class HeroUpdate(SQLModel):
     secret_name: str | None = None
     age: int | None = None
     password: str | None = None
-    
+    team_id: int | None = None
 
 # DATABASE
 sqlite_file_name = "db.sqlite3"
@@ -227,3 +257,19 @@ def delete_hero(*, session: Session = Depends(get_session), hero_id: int):
 
 # if __name__ == "__main__":
 #     main()
+
+# CREATE
+@app.post('/teams/', response_model=TeamPublic, status_code=status.HTTP_201_CREATED)
+def create_team(*, session: Session = Depends(get_session), team: TeamCreate):
+    db_team = Team.model_validate(team)
+    session.add(db_team)
+    session.commit()
+    session.refresh(db_team)
+    return db_team
+
+
+# READ
+@app.get('/teams/', response_model=list[TeamPublic], status_code=status.HTTP_200_OK)
+def read_teams(session: Session = Depends(get_session), offset: int = 0, limit: int = Query(default=100, le=100)):
+    teams = session.exec(select(Team).offset(offset).limit(limit)).all()
+    return teams

@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;400;700&display=swap');
+
+html,
+body {
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+    background-color: #E8E8E8;
+}
+
+.card {
+    margin-top: 8%;
+    border: 1px solid;
+    border-color: #00564c;
+}
+
+.card-header {
+    background-color: #00564c;
+}
+
+.card-body {
+    border-color: #00564c;
+    background-color: #008080;
+    height: 550px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+}
+
+.card-body li {
+    margin-top: -12px;
+}
+
+.chat-message-input {
+
+    height: 100px;
+}
+
+.message {
+    border-radius: 15px;
+    background-color: #E8E8E8;
+}
+
+#messages {
+    list-style: none;
+}
+
+#messageText {
+    width: 385px;
+    border-color: #00564c;
+    border: none;
+}
+
+#messageText:hover {
+    border-color: #00564c;
+}
+
+.input-message {
+    background-color: #00564c;
+}
+
+.chat-footer {
+    height: 100px;
+    background-color: #00564c;
+}
+
+.chat-input-div {
+    margin-top: 4%;
+}
+
+.btn-primary {
+    background-color: #008080;
+    border-color: #008080;
+}
+
+.btn-primary:hover {
+    background-color: #084D6E;
+    border-color: #084D6E;
+}
+
+.btn-like {
+    background-color: #00564c;
+    border-color: #00564c;
+    width: 50px;
+}
+
+.btn-sent {
+    background-color: #008080;
+    border-color: #008080;
+    border-radius: 50%;
+}
+
+.image {
+    background-image: url('static/assets/image/pmg-log.png');
+}
+
+.list-ld {
+    list-style: none;
+    display: flex;
+    padding: 5px;
+    ;
+}
+
+
+@media only screen and (max-width:1080px) {
+
+    /* For tables */
+    .container-fluid {
+        width: 780px;
+    }
+
+    #messageText {
+        width: 600px;
+    }
+
+    #messages {
+        height: auto;
+    }
+}
+
+@media only screen and (max-width:926px) {
+
+    /* For mobiles */
+    .container-fluid {
+        width: 100%;
+    }
+
+    #messageText {
+        width: 260px;
+    }
+}
